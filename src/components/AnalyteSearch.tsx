@@ -20,23 +20,34 @@ export function AnalyteSearch<T extends SearchItem>({
   }, [items, q]);
 
   return (
-    <fieldset className="field">
-      <legend>{label}</legend>
-      <input
-        type="search"
-        placeholder="영문·한글·동의어 검색 (예: glucose, 혈당, SGPT, A1c)"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        aria-label={`${label} 검색`}
-      />
-      <select size={Math.min(6, Math.max(2, matches.length))} value={value} onChange={(e) => onChange(e.target.value)} aria-label={label}>
+    <div className="analyte">
+      <label className="field">
+        <span className="lbl">{label}</span>
+        <input
+          type="search"
+          placeholder="glucose, 혈당, SGPT, A1c"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+      </label>
+      <ul className="picklist" role="listbox" aria-label={`${label} 목록`}>
         {matches.map((a) => (
-          <option key={a.id} value={a.id}>
-            {a.ko} · {a.en}
-          </option>
+          <li key={a.id}>
+            <button
+              type="button"
+              role="option"
+              aria-selected={a.id === value}
+              onClick={() => onChange(a.id)}
+            >
+              <span className="ko">{a.ko}</span>
+              <span className="en">{a.en}</span>
+            </button>
+          </li>
         ))}
-      </select>
-      {matches.length === 0 && <p className="muted">검색 결과가 없습니다. 이 앱에 없는 분석물은 임의로 추가하지 않았습니다.</p>}
-    </fieldset>
+      </ul>
+      {matches.length === 0 && (
+        <p className="note">'{q}'에 해당하는 분석물이 없습니다. 이 앱에 없는 분석물은 임의로 추가하지 않았습니다.</p>
+      )}
+    </div>
   );
 }

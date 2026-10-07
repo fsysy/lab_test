@@ -42,80 +42,88 @@ export function ConvertTab() {
   };
 
   return (
-    <section>
-      <AnalyteSearch items={ALL} value={id} onChange={pick} label="분석물" />
+    <div className="workbench">
+      <section className="worksheet" aria-label="입력">
+        <AnalyteSearch items={ALL} value={id} onChange={pick} label="분석물" />
 
-      <div className="row">
-        <label className="field grow">
-          값
-          <input inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} />
-        </label>
-        <label className="field grow">
-          원본 단위
-          <input list="units" value={from} onChange={(e) => setFrom(e.target.value)} />
-        </label>
-        <button type="button" className="swap" onClick={() => { setFrom(to); setTo(from); }} aria-label="원본·대상 단위 바꾸기" title="단위 바꾸기">
-          ⇄
-        </button>
-        <label className="field grow">
-          대상 단위
-          <input list="units" value={to} onChange={(e) => setTo(e.target.value)} />
-        </label>
-        <datalist id="units">
-          {analyte.units.map((u) => (
-            <option key={u} value={u} label={unitLabel(u)} />
-          ))}
-        </datalist>
-      </div>
-      <p className="muted">단위는 UCUM 표기(대소문자 구분): mg/dL, mmol/L, umol/L(=μmol/L), meq/L(=mEq/L), U/L, ukat/L</p>
+        <div className="entry">
+          <label className="field">
+            <span className="lbl">값</span>
+            <input className="num" inputMode="decimal" value={value} onChange={(e) => setValue(e.target.value)} />
+          </label>
+          <div className="units">
+            <label className="field">
+              <span className="lbl">원본 단위</span>
+              <input list="units" value={from} onChange={(e) => setFrom(e.target.value)} />
+            </label>
+            <button type="button" className="swap" onClick={() => { setFrom(to); setTo(from); }} aria-label="원본 단위와 대상 단위 맞바꾸기" title="맞바꾸기">
+              ⇄
+            </button>
+            <label className="field">
+              <span className="lbl">대상 단위</span>
+              <input list="units" value={to} onChange={(e) => setTo(e.target.value)} />
+            </label>
+          </div>
+          <datalist id="units">
+            {analyte.units.map((u) => (
+              <option key={u} value={u} label={unitLabel(u)} />
+            ))}
+          </datalist>
+          <p className="note">UCUM 표기를 씁니다(대소문자 구분). 예: mg/dL, mmol/L, umol/L, meq/L, U/L, ukat/L</p>
+        </div>
+      </section>
 
-      <div className="result" aria-live="polite">
-        {result === null && <span className="muted">값을 입력하세요.</span>}
+      <section className="outcome" aria-live="polite" aria-label="결과">
+        {result === null && <p className="note">값을 입력하면 결과가 여기에 표시됩니다.</p>}
+
         {result?.ok && (
           <>
-            <div className="big">
-              {fmt(result.value)} <span className="unit">{unitLabel(result.unit)}</span>
-            </div>
-            <button type="button" onClick={copy}>{copied ? '복사됨 ✓' : '결과 복사'}</button>
+            <p className="readout">
+              <span className="figure">{fmt(result.value)}</span>
+              <span className="unit">{unitLabel(result.unit)}</span>
+            </p>
+            <p className="equation">{result.basis.formula.split('\n')[0]}</p>
+            <button type="button" className="copy" onClick={copy}>
+              {copied ? '복사했습니다' : '결과 복사'}
+            </button>
+
+            <h2 className="derivation-title">계산 근거</h2>
+            <dl className="derivation">
+              <dt>방법</dt>
+              <dd>{result.basis.method}</dd>
+              <dt>계수</dt>
+              <dd>
+                <ul>{result.basis.coefficients.map((c) => <li key={c}>{c}</li>)}</ul>
+              </dd>
+              <dt>수식</dt>
+              <dd><pre>{result.basis.formula}</pre></dd>
+              <dt>가정</dt>
+              <dd>
+                {result.basis.assumptions.length === 0 ? (
+                  '없음'
+                ) : (
+                  <ul>{result.basis.assumptions.map((c) => <li key={c}>{c}</li>)}</ul>
+                )}
+              </dd>
+              <dt>출처</dt>
+              <dd>
+                <ul>
+                  {result.basis.sources.map((s) => (
+                    <li key={s.url}><a href={s.url} target="_blank" rel="noreferrer">{s.label}</a></li>
+                  ))}
+                </ul>
+              </dd>
+            </dl>
           </>
         )}
+
         {result && !result.ok && (
-          <div className="reject">
-            <strong>변환할 수 없습니다.</strong>
+          <div className="refusal" role="alert">
+            <h2>이 변환은 할 수 없습니다</h2>
             <p>{result.reason}</p>
           </div>
         )}
-      </div>
-
-      {result?.ok && (
-        <details className="basis" open>
-          <summary>계산 근거</summary>
-          <dl>
-            <dt>방법</dt>
-            <dd>{result.basis.method}</dd>
-            <dt>계수</dt>
-            <dd>
-              <ul>{result.basis.coefficients.map((c) => <li key={c}>{c}</li>)}</ul>
-            </dd>
-            <dt>수식</dt>
-            <dd><pre>{result.basis.formula}</pre></dd>
-            <dt>가정</dt>
-            <dd>
-              {result.basis.assumptions.length === 0 ? '특별한 가정 없음' : (
-                <ul>{result.basis.assumptions.map((c) => <li key={c}>{c}</li>)}</ul>
-              )}
-            </dd>
-            <dt>출처</dt>
-            <dd>
-              <ul>
-                {result.basis.sources.map((s) => (
-                  <li key={s.url}><a href={s.url} target="_blank" rel="noreferrer">{s.label}</a></li>
-                ))}
-              </ul>
-            </dd>
-          </dl>
-        </details>
-      )}
-    </section>
+      </section>
+    </div>
   );
 }
